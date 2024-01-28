@@ -630,7 +630,6 @@ Carseats$US <- as.factor(Carseats$US)
 model <- lm(Sales ~ Price + Urban + US, data=Carseats)
 
 summary(model)
-
 ```
 
 Your answer:
@@ -653,8 +652,11 @@ Your answer:
 
 ~~~
 Please write your answer in full sentences.
+The coefficient for 'Price' is approximately -0.0545, which means for each 1 unit increase in price, the sales decrease by 0.0545 units.
 
+The coefficient for 'UrbanYes' is approximately -0.0219, which suggests that being in an urban location is associated with a decrease in sales by about 0.0219 units compared to non-urban locations.
 
+Stores located in the US have sales that are about 1.2006 units higher, on average, than stores not located in the US
 ~~~
 
 (c) Write out the model in equation form, being careful to handle the qualitative variables properly.
@@ -669,7 +671,7 @@ Your answer:
 
 ~~~
 Please write your answer in full sentences.
-
+Sales = Bo + B1*Price + B2*UrbanYes + B3*USYes + e
 
 ~~~
 
@@ -679,16 +681,20 @@ Your answer:
 
 ~~~
 Please write your answer in full sentences.
+we reject the null hypothesis that the coefficient for Price is zero since the p-value is so small
 
+We cannot reject the null hypothesis for the UrbanYes coefficient
 
+we reject the null hypothesis for the USYes coefficient
 ~~~
 
 (e) On the basis of your response to the previous question, fit a smaller model that only uses the predictors for which there is evidence of association with the outcome.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+model2 <- lm(Sales ~ Price + US, data=Carseats)
+
+summary(model2)
 ```
 
 Your answer:
