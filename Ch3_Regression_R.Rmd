@@ -16,6 +16,7 @@ pacman::p_load(
       , RColorBrewer
       , lubridate
       , AmesHousing
+      , ISLR
       )
 ```
 
@@ -291,7 +292,8 @@ Here are few rules:
 - You need to explain why you added each variable.
 
 ```{r,eval=FALSE,echo=show_code}
-lmfit_2008<- # ["your model here"] # use ames_raw_2008
+lmfit_2008<- lm(log(SalePrice) ~ `Year Built`+`Year Remod/Add`+`Gr Liv Area`+`Full Bath`+`Half Bath`+`Bedroom AbvGr`+ `Garage Area`, data = ames_raw_2008)# ["your model here"] # use ames_raw_2008
+summary(lmfit_2008)
 ```
 
 When you decide on your model use the following to come up with your test loss.
@@ -305,17 +307,17 @@ Try to answer the following additional questions.
 - Does your model indicate a good fit?  If not where is the fit off?
 
 
+
 Your code:
 ```{r,echo=TRUE}
-#
-#
+summary(lmfit_2008)
 ```
 
 Your answer:
 
 ~~~
 Please write your answer in full sentences.
-
+It is a ok fit since my fit has a R square of 76.96%.
 
 ~~~
 
@@ -324,15 +326,14 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+
 ```
 
 Your answer:
 
 ~~~
 Please write your answer in full sentences.
-
+Definitely not because they will cause overfitting. And our loss function calculator puts more punishment on overfitting than underfitting.
 
 ~~~
 
@@ -341,15 +342,20 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+interaction <- lm(log(SalePrice) ~ (`Year Built`+`Year Remod/Add`+`Gr Liv Area`+`Full Bath`+`Half Bath`+`Bedroom AbvGr`+`Garage Area`)^2, data = ames_raw_2008)
+summary(interaction)
+
+interaction1 <- lm(log(SalePrice) ~ `Year Built`+`Year Remod/Add`+`Gr Liv Area`+`Full Bath`+`Half Bath`+`Bedroom AbvGr`+`Garage Area`+`Year Built`*`Half Bath`+`Gr Liv Area`*`Garage Area`, data = ames_raw_2008)
+summary(interaction1)
+pred_2009<-exp(predict(interaction1,newdata=ames_raw_2009))
+calc_loss(pred_2009,ames_raw_2009$SalePrice)
 ```
 
 Your answer:
 
 ~~~
 Please write your answer in full sentences.
-
+I choose Year Built`:`Half Bath` and `Gr Liv Area`:`Garage Area` as the interaction, as the result my loss function did have a little decrease.
 
 ~~~
 
@@ -358,8 +364,17 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+# Define the formula with polynomial terms up to the 3rd order for each predictor
+formula <- log(SalePrice) ~ poly(`Year Built`, 3) + poly(`Year Remod/Add`, 3) + 
+           poly(`Gr Liv Area`, 3) + poly(`Full Bath`, 3) + poly(`Half Bath`, 3,raw=TRUE) + 
+           poly(`Bedroom AbvGr`, 3) + poly(`TotRms AbvGrd`, 3) + poly(`Garage Area`, 3)
+
+# Fit the model using the lm() function in R
+lmfit_2008_poly <- lm(formula, data = ames_raw_2008)
+
+# Summarize the model to see the significance of the polynomial terms
+summary(lmfit_2008_poly)
+
 ```
 
 Your answer:
@@ -374,8 +389,15 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+ames_raw$predicted_price <- predict(interaction1, newdata = ames_raw)
+
+ames_raw$residuals <- with(ames_raw, SalePrice - predicted_price)
+
+ames_raw$over_priced <- with(ames_raw, SalePrice > predicted_price)
+
+top_overpriced <- ames_raw[ames_raw$over_priced, ][order(-ames_raw$residuals), ][1:5, ]
+
+top_overpriced
 ```
 
 Your answer:
@@ -390,14 +412,20 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+ames_raw$residuals <- with(ames_raw, predicted_price - SalePrice)
+
+ames_raw$good_deal <- with(ames_raw, SalePrice < predicted_price)
+
+top_deals <- ames_raw[ames_raw$good_deal, ][order(ames_raw$residuals), ][1:5, ]
+
+top_deals
 ```
 
 Your answer:
 
 ~~~
 Please write your answer in full sentences.
+According to my model, there is no good deal in the list.
 
 
 ~~~
@@ -410,16 +438,22 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+library(ISLR)
+model <- lm(mpg ~ horsepower, data=Auto)
+summary(model)
 ```
 
 Your answer:
 
 ~~~
 Please write your answer in full sentences.
+Yes, there is a relationship between the predictor and the response. The p-value for the horsepower coefficient is so small, which indicate a strong statistical significance.
 
+The strength of the relationship is the R-squared value, which is 0.6059. This means that approximately 60.59% of the variability in mpg can be explained by horsepower. This is a strong relationship.
 
+The relationship is negative. This means that as horsepower increases, the mpg tends to decrease.
+
+mpg = Intercept + (Coefficient × horsepower) = 39.935861 + (-0.157845 × 98)
 ~~~
 
 
@@ -438,8 +472,10 @@ iv. What is the predicted mpg associated with a horsepower of 98? What are the a
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+plot(Auto$horsepower, Auto$mpg, main="Regression of mpg on horsepower",
+     xlab="Horsepower", ylab="Miles per Gallon")
+
+abline(model)
 ```
 
 Your answer:
@@ -455,15 +491,15 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+par(mfrow=c(2,2), mar=c(2,2,2,2))
+plot(model)
 ```
 
 Your answer:
 
 ~~~
 Please write your answer in full sentences.
-
+The QQ plot is mostly a straight with some off at both ends suggesting the presence of outliers or that the normality assumption may not be completely valid. The pattern on the scale-location indicates potential heteroscedasticity.
 
 ~~~
 
@@ -474,8 +510,13 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+library(dplyr)
+
+auto_data <- Auto
+
+auto_data_numeric <- select_if(auto_data, is.numeric)
+
+pairs(auto_data_numeric)
 ```
 
 Your answer:
@@ -493,8 +534,11 @@ cor() which is qualitative.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+auto_data_numeric <- select_if(auto_data, is.numeric)
+
+correlation_matrix <- cor(auto_data_numeric)
+
+print(correlation_matrix)
 ```
 
 Your answer:
@@ -512,15 +556,20 @@ the predictors. Use the summary() function to print the results.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+auto_data_modified <- select(auto_data, -name)
+
+model <- lm(mpg ~ ., data = auto_data_modified)
+
+summary(model)
 ```
 
 Your answer:
 
 ~~~
 Please write your answer in full sentences.
-
+The R-square is as high as 0.8215 which means the model is good for these data.
+The coefficients for weight, year, and origin are significant.
+This positive coefficient for year implies that cars have become more fuel-efficient over time during the period covered by the dataset.
 
 ~~~
 
@@ -535,15 +584,15 @@ iii. What does the coefficient for the year variable suggest?
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+par(mfrow=c(2,2), mar=c(2,2,2,2))
+plot(model)
 ```
 
 Your answer:
 
 ~~~
 Please write your answer in full sentences.
-
+The QQ plot suggest that there might be some outliers.
 
 ~~~
 
@@ -551,15 +600,16 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+model_interaction <- lm(mpg ~ weight*year, data = auto_data_modified)
+
+summary(model_interaction)
 ```
 
 Your answer:
 
 ~~~
 Please write your answer in full sentences.
-
+if you suspect the effect of weight on mpg depending on the year of the car, you would include an interaction term between weight and year, and by looking at the result weight:year are significant.
 
 ~~~
 
@@ -572,8 +622,15 @@ This question should be answered using the Carseats data set.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+data(Carseats)
+
+Carseats$Urban <- as.factor(Carseats$Urban)
+Carseats$US <- as.factor(Carseats$US)
+
+model <- lm(Sales ~ Price + Urban + US, data=Carseats)
+
+summary(model)
+
 ```
 
 Your answer:
