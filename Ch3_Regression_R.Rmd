@@ -713,7 +713,7 @@ Your answer:
 
 ~~~
 Please write your answer in full sentences.
-
+No good at all, both of them have a R-square of 0.2393 which means those are really bad model.
 
 ~~~
 
@@ -721,8 +721,7 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+confint(model2, level=0.95)
 ```
 
 Your answer:
